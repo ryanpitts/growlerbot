@@ -40,11 +40,11 @@ def fetch_taps(location='Spokane South Hill'):
         redis_key = '{0} {1}'.format(location, tap_number)
         current_tap = r.hgetall(redis_key)
         if cmp(beer, current_tap) != 0:
-            print 'New beer on Tap {0}: {1}'.format(tap_number, beer['name'])
+            #print 'New beer on Tap {0}: {1}'.format(tap_number, beer['name'])
             tweet(beer)
             r.hmset(redis_key, beer)
         else:
-            print 'Same beer on Tap {0}'.format(tap_number)
+            #print 'Same beer on Tap {0}'.format(tap_number)
             tweet(beer)
             pass
 
@@ -74,8 +74,8 @@ def tweet(beer):
     if len(tweet) > 140:
         tweet = tweet[:137] + '...'
     
-    #twitter.update_status(status=tweet)
-    print tweet
+    #print tweet
+    twitter.update_status(status=tweet)
 
 if __name__ == "__main__":
     fetch_taps()
