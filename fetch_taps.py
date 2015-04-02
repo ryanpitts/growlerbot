@@ -1,9 +1,9 @@
 import os
 import inflect
+import redis
 import requests
 
 from pyquery import PyQuery as PQ
-from redislite import Redis
 from twython import Twython
 
 # this could be used to scrape other Growler Guys locations,
@@ -21,7 +21,8 @@ INFLECTION = inflect.engine()
 def fetch_taps(location='Spokane South Hill'):
     page = PQ(LOCATION_URLS[location])
     beer_list = page('.beerTapList li')
-    r = Redis('./taps.db')
+    redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
+    r = redis.from_url(redis_url)
     
     for item in beer_list:
         beer_obj = PQ(item)
