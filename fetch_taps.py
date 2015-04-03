@@ -45,7 +45,6 @@ def fetch_taps(location='Spokane South Hill'):
             r.hmset(redis_key, beer)
         else:
             #print 'Same beer on Tap {0}'.format(tap_number)
-            tweet(beer)
             pass
 
 def prettify(beer):
