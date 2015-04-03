@@ -67,7 +67,7 @@ def tweet(beer):
         TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET
     )
     
-    tweet = 'Now on Tap {0}: {1}, {2} from {3} in {4}'.format(
+    tweet = 'Now on Tap {0} at South Hill Growler Guys: {1}, {2} from {3} in {4}'.format(
         beer['tap_number'], beer['name'], INFLECTION.a(beer['style']),
         beer['brewery'], beer['city']
     )
