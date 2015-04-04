@@ -42,6 +42,14 @@ def flush_redis():
     r.flushdb()
     
     print 'Redis keys set to: ' + str(r.keys())
+    
+def check_redis():
+    '''
+    Check keys in current redis db
+    '''
+    r = create_redis_connection()
+    
+    print 'Redis keys set to: ' + str(r.keys())
 
 def fetch_taps(seed_db=False):
     for location in LOCATIONS:
@@ -101,6 +109,7 @@ def check_tweet(tweet):
 def process_args(arglist=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', action='store_const', const=True)
+    parser.add_argument('--check', action='store_const', const=True)
     parser.add_argument('--flush', action='store_const', const=True)
     args = parser.parse_args()
     
@@ -113,6 +122,8 @@ def main(args=None):
     
     if args.flush:
         flush_redis()
+    elif args.check:
+        check_redis()
     else:
         fetch_taps(seed_db=args.seed)
 
