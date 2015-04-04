@@ -23,7 +23,7 @@ LOCATIONS = [
     {
         'name': 'South Hill Growler Guys',
         'url': 'http://www.thegrowlerguys.com/whats-on-tap/washington-spokane-south-hill/',
-        'scraper': 'scrape_growler_guys',
+        'scraper': scrape_growler_guys,
     },
 ]
 BEERS = {}
@@ -45,22 +45,19 @@ def flush_redis():
 
 def fetch_taps(seed_db=False):
     for location in LOCATIONS:
-        beers = globals()[location['scraper']](location)
+        beers = location['scraper'](location)
         BEERS.update(beers)
         
-    for beer in BEERS:
-        compare_taps(beer, seed_db)
-
-def compare_taps(beer, seed_db):
     r = create_redis_connection()
-    scraped_tap = BEERS[beer]
-    current_tap = r.hgetall(beer)
+    for beer in BEERS:
+        scraped_tap = BEERS[beer]
+        current_tap = r.hgetall(beer)
 
-    if cmp(scraped_tap, current_tap) != 0:
-        if not seed_db: tweet_tap_update(scraped_tap, current_tap)
-        r.hmset(beer, scraped_tap)
-    else:
-        pass
+        if cmp(scraped_tap, current_tap) != 0:
+            if not seed_db: tweet_tap_update(scraped_tap, current_tap)
+            r.hmset(beer, scraped_tap)
+        else:
+            pass
 
 def tweet_tap_update(beer, previous_beer=None):
     twitter = Twython(
