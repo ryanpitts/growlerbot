@@ -48,15 +48,17 @@ def fetch_taps(location='Spokane South Hill'):
             pass
 
 def prettify(beer):
-    capitals = ['Imperial', 'IPA', 'Russian', 'Scottish', 'Cascadian', 'Belgian']
-    for item in capitals:
-        if item.lower() in beer['style']:
-            beer['style'] = beer['style'].replace(item.lower(), item)
+    if 'style' in beer:
+        capitals = ['Imperial', 'IPA', 'Russian', 'Scottish', 'Scotch', 'Cascadian', 'Belgian', 'German', 'American', 'British', 'Munich', 'Flanders', 'Christmas', 'Double', 'Triple']
+        for item in capitals:
+            if item.lower() in beer['style']:
+                beer['style'] = beer['style'].replace(item.lower(), item)
             
-    hyphenated = ['barrel-aged']
-    for item in hyphenated:
-        if beer['style'] == item.replace('-', ' '):
-            beer['style'] = item
+        hyphenated = ['barrel-aged']
+        for item in hyphenated:
+            unhyphenated = item.replace('-', ' ')
+            if unhyphenated in beer['style']:
+                beer['style'] = beer['style'].replace(unhyphenated, item)
             
     return beer
 
