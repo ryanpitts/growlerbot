@@ -15,7 +15,7 @@ TWITTER_ACCESS_TOKEN = os.environ['TWITTER_ACCESS_TOKEN']
 TWITTER_ACCESS_SECRET = os.environ['TWITTER_ACCESS_SECRET']
 INFLECTION = inflect.engine()
 
-DRY_RUN = True
+DRY_RUN = False
 
 # this could be used to scrape other locations,
 # if one were so inclined
@@ -109,6 +109,7 @@ def check_tweet(tweet):
 def process_args(arglist=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', action='store_const', const=True)
+    parser.add_argument('--dry', action='store_const', const=True)
     parser.add_argument('--check', action='store_const', const=True)
     parser.add_argument('--flush', action='store_const', const=True)
     args = parser.parse_args()
@@ -119,6 +120,10 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     args = process_args(args)
+    
+    if args.dry:
+        DRY_RUN = True
+        print 'Dry run ...'
     
     if args.flush:
         flush_redis()
