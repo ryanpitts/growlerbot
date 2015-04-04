@@ -7,6 +7,8 @@ import requests
 from pyquery import PyQuery as PQ
 from twython import Twython
 
+from scrapers import scrape_growler_guys
+
 TWITTER_CONSUMER_KEY = os.environ['TWITTER_CONSUMER_KEY']
 TWITTER_CONSUMER_SECRET = os.environ['TWITTER_CONSUMER_SECRET']
 TWITTER_ACCESS_TOKEN = os.environ['TWITTER_ACCESS_TOKEN']
@@ -14,7 +16,6 @@ TWITTER_ACCESS_SECRET = os.environ['TWITTER_ACCESS_SECRET']
 INFLECTION = inflect.engine()
 
 DRY_RUN = True
-LOCAL_TEST = True
 
 # this could be used to scrape other locations,
 # if one were so inclined
@@ -22,8 +23,10 @@ LOCATIONS = [
     {
         'name': 'South Hill Growler Guys',
         'url': 'http://www.thegrowlerguys.com/whats-on-tap/washington-spokane-south-hill/',
+        'scraper': 'scrape_growler_guys',
     },
 ]
+BEERS = {}
 
 def create_redis_connection():
     redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
@@ -42,70 +45,22 @@ def flush_redis():
 
 def fetch_taps(seed_db=False):
     for location in LOCATIONS:
-        location_name = location['name']
-        if LOCAL_TEST:
-            page = PQ(filename='test.html')
-        else:
-            page = PQ(location['url'])
-        r = create_redis_connection()
+        beers = globals()[location['scraper']](location)
+        BEERS.update(beers)
         
-        beer_list = page('.beerTapList li')
-        for item in beer_list:
-            beer_obj = PQ(item)
-            tap_number = beer_obj('.tap_number').text().strip()
-            
-            beer = build_beer_record(
-                location = location_name,
-                name = beer_obj('.beerName .title').text().strip(),
-                style = beer_obj('.beerName .style').text().strip().strip('- ').lower(),
-                brewery = beer_obj('.brewery').text().strip(),
-                city = beer_obj('.breweryInfo .txt').text().strip().strip('- ').replace(' ,',','),
-            )
-            
-            # make a hash value for the key key
-            h = hashlib.md5(b'{0} {1}'.format(beer['location'], tap_number))
-            redis_key = h.hexdigest()
-            
-            current_tap = r.hgetall(redis_key)
-            if cmp(beer, current_tap) != 0:
-                if not seed_db: tweet_tap_update(beer, current_tap)
-                r.hmset(redis_key, beer)
-            else:
-                pass
+    for beer in BEERS:
+        compare_taps(beer, seed_db)
 
-def build_beer_record(location, name, style=None, brewery=None, city=None):
-    beer = {
-        'location': location,
-        'name': name,
-        'style': style,
-        'brewery': brewery,
-        'city': city
-    }
-    
-    return prettify(beer)
-    
-def compare_taps(beer, redis_key, seed_db):
-    current_tap = r.hgetall(redis_key)
-    if cmp(beer, current_tap) != 0:
-        if not seed_db: tweet_tap_update(beer, current_tap)
-        r.hmset(redis_key, beer)
+def compare_taps(beer, seed_db):
+    r = create_redis_connection()
+    scraped_tap = BEERS[beer]
+    current_tap = r.hgetall(beer)
+
+    if cmp(scraped_tap, current_tap) != 0:
+        if not seed_db: tweet_tap_update(scraped_tap, current_tap)
+        r.hmset(beer, scraped_tap)
     else:
         pass
-    
-def prettify(beer):
-    if 'style' in beer:
-        capitals = ['Imperial', 'IPA', 'Russian', 'Scottish', 'Scotch', 'Cascadian', 'Belgian', 'German', 'American', 'British', 'Munich', 'Flanders', 'Christmas', 'Double', 'Triple']
-        for item in capitals:
-            if item.lower() in beer['style']:
-                beer['style'] = beer['style'].replace(item.lower(), item)
-            
-        hyphenated = ['barrel-aged']
-        for item in hyphenated:
-            unhyphenated = item.replace('-', ' ')
-            if unhyphenated in beer['style']:
-                beer['style'] = beer['style'].replace(unhyphenated, item)
-            
-    return beer
 
 def tweet_tap_update(beer, previous_beer=None):
     twitter = Twython(
