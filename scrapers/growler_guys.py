@@ -20,10 +20,10 @@ def scrape_growler_guys(location):
 
         beer = build_beer_record(
             location = location['name'],
-            name = beer_obj('.beerName .title').text().strip(),
-            style = beer_obj('.beerName .style').text().strip().strip('- ').lower(),
-            brewery = beer_obj('.brewery').text().strip(),
-            city = beer_obj('.breweryInfo .txt').text().strip().strip('- ').replace(' ,',','),
+            name = beer_obj('.beerName .title').text().strip().encode('utf-8'),
+            style = beer_obj('.beerName .style').text().strip().strip('- ').lower().encode('utf-8'),
+            brewery = beer_obj('.brewery').text().strip().encode('utf-8'),
+            city = beer_obj('.breweryInfo .txt').text().strip().strip('- ').replace(' ,',',').encode('utf-8'),
         )
 
         # make a hash value for the key

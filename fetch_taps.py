@@ -51,6 +51,13 @@ def check_redis():
     
     print 'Redis keys set to: ' + str(r.keys())
 
+def clean_the_lines():
+    flush_redis()
+    fetch_taps(seed_db=True)
+    check_redis()
+    
+    print 'The lines are cleaned.'
+
 def fetch_taps(seed_db=False):
     for location in LOCATIONS:
         beers = location['scraper'](location)
@@ -72,13 +79,12 @@ def tweet_tap_update(beer, previous_beer=None):
         TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET,
         TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET
     )
-    
     # tweet about the beer that used to be on tap
     if previous_beer:
-        tweet = 'Blown keg at {0}: {1}, {2} from {3} in {4} is gone'.format(
-            previous_beer['location'], previous_beer['name'],
-            INFLECTION.a(previous_beer['style']),
-            previous_beer['brewery'], previous_beer['city']
+        tweet = u'Blown keg at {0}: {1}, {2} from {3} in {4}, is gone'.format(
+            previous_beer['location'].decode('utf-8'), previous_beer['name'].decode('utf-8'),
+            INFLECTION.a(previous_beer['style'].decode('utf-8')),
+            previous_beer['brewery'].decode('utf-8'), previous_beer['city'].decode('utf-8')
         )
         tweet = check_tweet(tweet)
 
@@ -88,10 +94,10 @@ def tweet_tap_update(beer, previous_beer=None):
             twitter.update_status(status=tweet)
 
     # tweet about the new beer on tap
-    tweet = 'Now on tap at {0}: {1}, {2} from {3} in {4}'.format(
-        beer['location'], beer['name'],
-        INFLECTION.a(beer['style']),
-        beer['brewery'], beer['city']
+    tweet = u'Now on tap at {0}: {1}, {2} from {3} in {4}'.format(
+        beer['location'].decode('utf-8'), beer['name'].decode('utf-8'),
+        INFLECTION.a(beer['style'].decode('utf-8')),
+        beer['brewery'].decode('utf-8'), beer['city'].decode('utf-8')
     )
     tweet = check_tweet(tweet)
     
@@ -112,6 +118,7 @@ def process_args(arglist=None):
     parser.add_argument('--dry', action='store_const', const=True)
     parser.add_argument('--check', action='store_const', const=True)
     parser.add_argument('--flush', action='store_const', const=True)
+    parser.add_argument('--clean', action='store_const', const=True)
     args = parser.parse_args()
     
     return args
@@ -122,6 +129,8 @@ def main(args=None):
     args = process_args(args)
     
     if args.dry:
+        # `global` booo, this should totally be refactored
+        global DRY_RUN
         DRY_RUN = True
         print 'Dry run ...'
     
@@ -129,6 +138,8 @@ def main(args=None):
         flush_redis()
     elif args.check:
         check_redis()
+    elif args.clean:
+        clean_the_lines()
     else:
         fetch_taps(seed_db=args.seed)
 
