@@ -22,7 +22,7 @@ DRY_RUN = False
 LOCATIONS = [
     {
         'name': 'South Hill Growler Guys',
-        'url': 'http://www.thegrowlerguys.com/whats-on-tap/washington-spokane-south-hill/',
+        'url': 'https://www.thegrowlerguys.com/on-tap-location/spokane-washington-south-hill/',
         'scraper': scrape_growler_guys,
     },
 ]

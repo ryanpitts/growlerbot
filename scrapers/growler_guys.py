@@ -4,6 +4,7 @@ from pyquery import PyQuery as PQ
 from utils.format_beers import build_beer_record
 
 LOCAL_TEST = False
+HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:32.0) Gecko/20100101 Firefox/32.0',}
 
 def scrape_growler_guys(location):
     taps = {}
@@ -11,12 +12,12 @@ def scrape_growler_guys(location):
     if LOCAL_TEST:
         page = PQ(filename='test.html')
     else:
-        page = PQ(location['url'])
-
-    beer_list = page('.beerTapList li')
+        page = PQ(location['url'], headers=HEADERS)
+    
+    beer_list = page('.tap-list li')
     for item in beer_list:
         beer_obj = PQ(item)
-        tap_number = beer_obj('.tap_number').text().strip()
+        tap_number = beer_obj.find('.tap_number').text().strip()
 
         beer = build_beer_record(
             location = location['name'],
